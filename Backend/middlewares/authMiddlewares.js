@@ -1,27 +1,54 @@
 import jwt from 'jsonwebtoken';
-import Usuario  from '../models/Usuario.js';
+import Usuario from '../models/Usuario.js';
 
-const authMiddlawere = async (req, res, next) => {
-    let token;
-}
-if (req.hearders.authorization && req.headers.authorization.startsWith('Bearer')) {
+const authMiddleware = async (req, res, next) => {
     try {
-        token = req.headers.authorization .split(' ')[1];
+        // Verifica se o token foi enviado no header
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ 
+                message: 'Token não fornecido. Formato: Bearer <token>' 
+            });
+        }
+        
+        // Extrai o token
+        const token = authHeader.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({ message: 'Token não fornecido.' });
+        }
+        
+        // Decodifica o token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.usuario = await Usuario.findById(decoded.id).select('-senha');
-
-    if (!req.usuario) {
-        return res.status(401).json({ message: 'Usuário não encontrado.' });
-    }
-    next();
-
-    }
-    catch (error) {
+        
+        // Busca o usuário no banco (sem a senha)
+        const usuario = await Usuario.findById(decoded.id).select('-senha');
+        
+        if (!usuario) {
+            return res.status(401).json({ message: 'Usuário não encontrado.' });
+        }
+        
+        // Adiciona o usuário à requisição
+        req.usuario = usuario;
+        
+        // Continua para a próxima função/middleware
+        return next();
+        
+    } catch (error) {
         console.error('Erro na autenticação do token:', error);
-        return res.status(401).json({ message: 'Token inválido ou expirado.' });
-    }}
-
-    if (!token) {
-        return res.status(401).json({ message: 'Token não fornecido.' });
+        
+        // Tratamento específico de erros do JWT
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ message: 'Token inválido.' });
+        }
+        
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Token expirado.' });
+        }
+        
+        return res.status(401).json({ message: 'Não autorizado.' });
     }
-export default authMiddlawere;
+};
+
+export default authMiddleware;

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
   // Altere para o IP da sua máquina na rede
-   const API_URL = 'http://192.168.3.159:5000/api';
+   const API_URL = 'http://192.168.100.8:5000/api';
 
   const api = axios.create({
     baseURL: API_URL,

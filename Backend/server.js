@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import connectDB from './src/config/database.js';
-import authRoutes from '.routes/authRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 import espacoRoutes from './routes/espacoRoutes.js';
 import reservaRoutes from './routes/reservaRoutes.js';
 
